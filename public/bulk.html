@@ -20,8 +20,13 @@
         .video-meta { font-size: 12px; color: #666; margin-top: 4px; }
         .btn-generate { width: 100%; background: red; color: white; padding: 15px; border: none; font-weight: bold; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
         .btn-generate:hover { background: #cc0000; }
+        
+        /* Modifikasi Area Box Hasil & Header Tombol Salin */
         .result-box { margin-top: 20px; display: none; }
-        .result-box h3 { color: #fff; margin-bottom: 10px; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .result-header h3 { color: #fff; margin: 0; }
+        .btn-copy { background: #0088cc; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .btn-copy:hover { background: #0077b5; }
         textarea { width: 100%; height: 200px; background: #000; color: #00ff00; border: 1px solid #333; padding: 10px; font-family: monospace; box-sizing: border-box; border-radius: 4px; font-size: 14px; resize: vertical; }
     </style>
 </head>
@@ -58,8 +63,12 @@
 
     <button class="btn-generate" onclick="generateLinks()">Generate List Link</button>
 
+    <!-- Kotak Hasil Generate & Tombol Salin Pintar -->
     <div class="result-box" id="result-container">
-        <h3>Hasil Generate Link:</h3>
+        <div class="result-header">
+            <h3>Hasil Generate Link:</h3>
+            <button id="copy-button" class="btn-copy" onclick="copyGeneratedLinks()">📋 Salin Semua Link</button>
+        </div>
         <textarea id="result-output" readonly onclick="this.select()"></textarea>
     </div>
 </div>
@@ -87,7 +96,7 @@
         }
     }
 
-    // 2. Tampilkan daftar video ke dalam HTML (Mendukung Dynamic Table Name dari Backend)
+    // 2. Tampilkan daftar video ke dalam HTML
     function renderVideos() {
         const container = document.getElementById('video-container');
         container.innerHTML = '';
@@ -112,7 +121,6 @@
             `;
         });
         
-        // Pasang event listener untuk menghitung checkbox yang aktif
         document.querySelectorAll('.video-checkbox').forEach(cb => {
             cb.addEventListener('change', updateCount);
         });
@@ -138,7 +146,7 @@
         updateCount();
     }
 
-    // 5. Kirim data yang dipilih ke API Backend untuk diubah ke domain baru dengan ekstensi .html
+    // 5. Kirim data ke Backend API
     async function generateLinks() {
         const checkboxes = document.querySelectorAll('.video-checkbox:checked');
         const includeTitle = document.getElementById('include-title').checked;
@@ -159,7 +167,6 @@
             
             const json = await res.json();
             if(json.success) {
-                // Menggunakan links dari backend yang sudah dipastikan menyertakan format .html
                 document.getElementById('result-output').value = json.links;
                 document.getElementById('result-container').style.display = 'block';
                 document.getElementById('result-output').scrollIntoView({ behavior: 'smooth' });
@@ -171,7 +178,28 @@
         }
     }
 
-    // Ambil data otomatis saat pertama kali halaman di-load
+    // 🎯 6. FITUR BARU: Salin Semua Teks Link Hasil ke Clipboard Otomatis
+    function copyGeneratedLinks() {
+        const textarea = document.getElementById('result-output');
+        const copyButton = document.getElementById('copy-button');
+        
+        if (!textarea.value) return;
+
+        // Proses penyalinan teks ke clipboard browser
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            // Beri feedback animasi perubahan tombol jika berhasil gess
+            copyButton.innerText = "✅ Berhasil Disalin!";
+            copyButton.style.background = "#28a745";
+            
+            setTimeout(() => {
+                copyButton.innerText = "📋 Salin Semua Link";
+                copyButton.style.background = "#0088cc";
+            }, 2000);
+        }).catch(err => {
+            alert('Gagal menyalin teks otomatis.');
+        });
+    }
+
     window.onload = fetchVideos;
 </script>
 </body>
