@@ -13,8 +13,8 @@ export async function onRequestGet(context) {
   }
 
   // 1. Susun URL query untuk tabel videos1 dan videos2
-  let url1 = `${SUPABASE_URL}/rest/v1/videos1?select=id,title,videy_id&order=id.desc&limit=50`;
-  let url2 = `${SUPABASE_URL}/rest/v1/videos2?select=id,title,videy_id&order=id.desc&limit=50`;
+  let url1 = `${SUPABASE_URL}/rest/v1/videos1?select=id,title,videy_id&order=id.desc&limit=500`;
+  let url2 = `${SUPABASE_URL}/rest/v1/videos2?select=id,title,videy_id&order=id.desc&limit=500`;
   
   // Jika ada keyword pencarian, terapkan ke kedua URL
   if (search) {
