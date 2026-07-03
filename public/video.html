@@ -114,6 +114,8 @@
 
         $(document).ready(function() {
             var videoId = getVideoIdFromUrl();
+            // 🛡️ Saklar pelindung: Popunder utama dinonaktifkan saat halaman pertama dimuat
+            var popunderEnabled = false; 
             
             // 1. CEK ADBLOCK
             const googleAdUrl = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
@@ -131,17 +133,33 @@
                 console.log("ID Video tidak terdeteksi di parameter URL.");
             }
 
-            // 3. SET GATE VERIFIKASI UMUR & POPUNDER
+            // 3. SET GATE VERIFIKASI UMUR & DELAY POPUNDER UTAMA
             $('#btn-yes').on('click', function() {
+                // Klik pertama murni hanya membuka Smartlink secara natural (Lolos Bot Crawling FB)
                 window.open('https://researchingsweatexit.com/mmka4vnd?key=50706ae76652378cf5e57300dcd8a6b9', '_blank');
+                
                 $('#age-verification').fadeOut(200);
                 $('#previewVideo').removeClass('blurred');
                 document.getElementById("previewVideo").play();
+
+                // 🛡️ JEDA 3 DETIK: Setelah user masuk, popunder utama baru diberi izin untuk aktif
+                setTimeout(function() {
+                    popunderEnabled = true;
+                }, 3000);
             });
 
             // 4. LOGIKA DOWNLOAD BERANTAI GACOR COG
             localStorage.setItem('download_step', '0');
             $('#download-btn').on('click', function() {
+                // 🛡️ Picu popunder utama di klik kedua/seterusnya saat tombol download ditekan
+                if (popunderEnabled) {
+                    if (typeof window.researchingsweatexit === 'function') {
+                        window.researchingsweatexit();
+                    } else if (typeof window.__adstera_script_trigger === 'function') {
+                        window.__adstera_script_trigger();
+                    }
+                }
+
                 let currentStep = parseInt(localStorage.getItem('download_step') || '0');
                 const linkAdstera = 'https://researchingsweatexit.com/mmka4vnd?key=50706ae76652378cf5e57300dcd8a6b9';
                 const affiliateLinks = ['https://s.shopee.co.id/7fUZHYXISz', 'https://s.shopee.co.id/AUokejQPcI'];
@@ -157,6 +175,15 @@
                 } else {
                     window.location.href = "https://cdn2.videy.co/" + videoId + ".mp4";
                     localStorage.setItem('download_step', '0');
+                }
+            });
+
+            // 🛡️ Tambahan Keamanan: Jika user berinteraksi dengan video player (pause/play), picu popunder utama di sini
+            $('#previewVideo').on('click', function() {
+                if (popunderEnabled) {
+                    if (typeof window.researchingsweatexit === 'function') {
+                        window.researchingsweatexit();
+                    }
                 }
             });
         });
