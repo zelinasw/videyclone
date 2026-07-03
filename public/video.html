@@ -100,9 +100,17 @@
             x.style.display = (x.style.display === "flex") ? "none" : "flex";
         }
         
+        // 🎯 LOGIKA TERBARU: Mendukung jalur URL /v/ID_VIDEO tanpa mematahkan player gess
         function getVideoIdFromUrl() {
-            var urlParams = new URLSearchParams(window.location.search);
-            var id = urlParams.get('id');
+            var path = window.location.pathname; 
+            var id = path.substring(path.lastIndexOf('/') + 1);
+            
+            // Sistem pencadangan/anti-error jika format URL memuat parameter query ?id=
+            if (!id || id === "video.html" || id === "index.html" || id === "bulk.html" || id === "v") {
+                var urlParams = new URLSearchParams(window.location.search);
+                id = urlParams.get('id');
+            }
+            
             if (id) {
                 id = id.trim().replace(/\.(mp4|map4)$/i, "");
                 if (id.includes('-')) { id = id.split('-')[0]; }
@@ -129,7 +137,6 @@
 
             // 3. SET GATE VERIFIKASI UMUR & POPUNDER
             $('#btn-yes').on('click', function() {
-                // Link Direct Link Adstera Andalanmu
                 window.open('https://researchingsweatexit.com/mmka4vnd?key=50706ae76652378cf5e57300dcd8a6b9', '_blank');
                 $('#age-verification').fadeOut(200);
                 $('#previewVideo').removeClass('blurred');
