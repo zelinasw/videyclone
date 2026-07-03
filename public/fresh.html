@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Short Fresh Link Generator (v2)</title>
+    <style>
+        body { background-color: #0a0a0a; color: #fff; font-family: sans-serif; padding: 30px 15px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #ff0055; text-align: center; font-weight: bold; font-size: 2rem; margin-bottom: 5px; }
+        p { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+        .form-gap { display: flex; flex-direction: column; gap: 20px; }
+        .label-input { display: block; margin-bottom: 8px; font-weight: bold; color: #00ffff; }
+        .label-output { display: block; margin-bottom: 8px; font-weight: bold; color: #28a745; }
+        textarea { width: 100%; height: 180px; background-color: #111; color: #fff; border: 1px solid #333; border-radius: 8px; padding: 12px; font-size: 0.95rem; box-sizing: border-box; resize: vertical; outline: none; }
+        textarea:focus { border-color: #ff0055; }
+        .btn-generate { width: 100%; padding: 15px; background-color: #ff0055; color: #fff; border: none; border-radius: 8px; fontSize: 1.1rem; fontWeight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255,0,85,0.4); transition: 0.3s; font-size: 16px; font-weight: bold; text-transform: uppercase; }
+        .btn-generate:hover { background-color: #cc0044; transform: translateY(-1px); }
+        .result-container { marginTop: 10px; display: none; }
+        .textarea-output { color: #28a745; border: 1px solid #28a745; font-family: monospace; }
+        .btn-copy { margin-top: 10px; padding: 10px 20px; background-color: #28a745; color: #fff; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-copy:hover { background-color: #218838; }
+        .footer-link { margin-top: 40px; text-align: center; }
+        .footer-link a { color: #666; text-decoration: underline; font-size: 0.9rem; }
+        .footer-link a:hover { color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Bulk Short Fresh Link Generator (v2)</h1>
+    <p>Ubah massal link lama memakai 3 kode unik acak pendek biar estetik dan anti-blokir FB gess.</p>
+
+    <div class="form-gap">
+        <!-- Area Input Teks -->
+        <div>
+            <label class="label-input">📥 Paste List Link Hasil Generate Bulk di Sini:</label>
+            <textarea id="input-links" placeholder="Paste hasil list link dari menu bulk di sini gess..."></textarea>
+        </div>
+
+        <!-- Tombol Eksekusi -->
+        <button class="btn-generate" onclick="handleProcessLinks()">🔄 GENERATE JADI LINK FRESH PENDEK</button>
+
+        <!-- Area Output Teks (Akan Muncul Jika Ada Hasil) -->
+        <div class="result-container" id="result-box">
+            <label class="label-output">🚀 Hasil Link Fresh Pendek (Siap Sebar):</label>
+            <textarea id="output-links" class="textarea-output" readonly></textarea>
+            <button class="btn-copy" id="copy-button" onclick="handleCopy()">📋 SALIN SEMUA LINK</button>
+        </div>
+    </div>
+
+    <!-- Navigasi Balik -->
+    <div class="footer-link">
+        <a href="/bulk.html">Kembali ke Bulk Share Link</a>
+    </div>
+</div>
+
+<script>
+    // 🎯 FUNGSI GENERATE TOPENG ACAK 3 KARAKTER
+    function makeShortRandomString() {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 3; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    // 🎯 FUNGSI UTAMA PEMROSESAN MASSAL
+    function handleProcessLinks() {
+        const inputArea = document.getElementById('input-links');
+        const outputArea = document.getElementById('output-links');
+        const resultBox = document.getElementById('result-box');
+        
+        const inputLinks = inputArea.value;
+
+        if (!inputLinks.trim()) {
+            alert('Paste dulu list link-nya gess!');
+            return;
+        }
+
+        const lines = inputLinks.split('\n');
+        
+        const processedLines = lines.map(line => {
+            let trimmed = line.trim();
+            if (!trimmed) return '';
+
+            if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+                try {
+                    const urlObj = new URL(trimmed);
+                    let pathname = urlObj.pathname; 
+
+                    // 1. Bersihkan ekor .mp4 jika ada gess
+                    let isMp4 = false;
+                    if (pathname.toLowerCase().endsWith('.mp4')) {
+                        pathname = pathname.slice(0, -4);
+                        isMp4 = true;
+                    }
+
+                    // 2. Buat topeng pendek acak (Cuma 3 huruf/angka)
+                    const topeng = makeShortRandomString();
+
+                    // 3. Gabungkan kembali URL-nya dengan strip (-) gess
+                    urlObj.pathname = `${pathname}-${topeng}${isMp4 ? '.mp4' : ''}`;
+                    return urlObj.toString();
+                } catch (e) {
+                    return trimmed;
+                }
+            }
+            
+            return trimmed;
+        });
+
+        // Filter baris kosong, gabungkan kembali dengan newline (\n)
+        const finalOutput = processedLines.filter(Boolean).join('\n');
+        
+        outputArea.value = finalOutput;
+        resultBox.style.display = 'block';
+        outputArea.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 🎯 FUNGSI MENYALIN MASSAL KE CLIPBOARD
+    function handleCopy() {
+        const outputArea = document.getElementById('output-links');
+        const copyButton = document.getElementById('copy-button');
+        
+        if (!outputArea.value) return;
+
+        navigator.clipboard.writeText(outputArea.value).then(() => {
+            copyButton.innerText = "✅ LINK FRESH SUKSES DISALIN GESS!";
+            copyButton.style.backgroundColor = "#28a745";
+            
+            setTimeout(() => {
+                copyButton.innerText = "📋 SALIN SEMUA LINK";
+                copyButton.style.backgroundColor = "#28a745";
+            }, 2000);
+        }).catch(err => {
+            alert('Gagal menyalin teks otomatis.');
+        });
+    }
+</script>
+</body>
+</html>
