@@ -99,7 +99,6 @@
         }
         
         currentVideos.forEach(video => {
-            // Jika asal tabel tidak terdefinisi dari backend, default ke 'videos2'
             const originTable = video.origin_table || 'videos2';
             
             container.innerHTML += `
@@ -133,14 +132,13 @@
         const checkboxes = document.querySelectorAll('.video-checkbox');
         if(checkboxes.length === 0) return;
         
-        // Cek jika sudah tercentang semua, maka uncheck. Jika belum, centang semua.
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         checkboxes.forEach(cb => cb.checked = !allChecked);
         
         updateCount();
     }
 
-    // 5. Kirim data yang dipilih ke API Backend untuk diubah ke domain baru
+    // 5. Kirim data yang dipilih ke API Backend untuk diubah ke domain baru dengan ekstensi .html
     async function generateLinks() {
         const checkboxes = document.querySelectorAll('.video-checkbox:checked');
         const includeTitle = document.getElementById('include-title').checked;
@@ -161,6 +159,7 @@
             
             const json = await res.json();
             if(json.success) {
+                // Menggunakan links dari backend yang sudah dipastikan menyertakan format .html
                 document.getElementById('result-output').value = json.links;
                 document.getElementById('result-container').style.display = 'block';
                 document.getElementById('result-output').scrollIntoView({ behavior: 'smooth' });
