@@ -12,11 +12,11 @@ export async function onRequestPost(context) {
     const url = new URL(context.request.url);
     const currentDomain = `${url.protocol}//${url.host}`;
 
-    const generatedLinks = videoIds.map(video => {
-      // 🎯 PERBAIKAN: Dikunci ke video.html agar file HTML statis kamu langsung terpanggil sempurna
-      const link = `${currentDomain}/video.html?id=${video.videy_id}`;
-      return includeTitle ? `${video.title}\n${link}` : link;
-    });
+   const generatedLinks = videoIds.map(video => {
+  // 🎯 SEKARANG URL-NYA SUDAH PAKAI /v/ BIAR MIRIP ORIGINAL
+  const link = `${currentDomain}/v/${video.videy_id}`;
+  return includeTitle ? `${video.title}\n${link}` : link;
+});
 
     return new Response(JSON.stringify({ success: true, links: generatedLinks.join('\n\n') }), {
       headers: { 'Content-Type': 'application/json' }
