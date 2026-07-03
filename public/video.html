@@ -28,10 +28,13 @@
         .btn-verify-no { background: #222; color: #999; padding: 10px 24px; border: 1px solid #333; border-radius: 4px; cursor: pointer; margin: 5px; }
         
         /* Tombol Download & Aksi Tambahan Gacor */
-        .action-area { margin-top: 20px; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .action-area { margin-top: 20px; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .btn-download { padding: 15px 30px; font-size: 16px; background-color: #28a745; color: #fff; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; max-width: 400px; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); transition: 0.2s; text-transform: uppercase; }
         .btn-download:hover { transform: scale(1.03); background-color: #218838; }
-        .link-more-vid { color: #666; text-decoration: underline; font-size: 14px; cursor: pointer; margin-top: 5px; display: inline-block; }
+        
+        /* Modifikasi link lama menjadi tombol galeri solid gess */
+        .btn-more-vid { display: inline-block; padding: 12px 24px; font-size: 14px; background-color: #222; color: #aaa; border: 1px solid #333; border-radius: 50px; font-weight: 600; text-decoration: none; width: 100%; max-width: 400px; box-sizing: border-box; transition: 0.2s; text-transform: uppercase; }
+        .btn-more-vid:hover { background-color: #2a2a2a; color: #fff; border-color: #444; }
         .blurred { filter: blur(15px); pointer-events: none; }
     </style>
 </head>
@@ -87,11 +90,12 @@
 
                 <div class="action-area">
                     <button id="download-btn" class="btn-download">📥 DOWNLOAD VIDEO SEKARANG</button>
-                    <a href="/bulk.html" class="link-more-vid">Cari video lainnya di sini</a>
+                    <!-- Tombol baru menggantikan tautan teks lama gess -->
+                    <a href="/list.html" class="btn-more-vid">🔍 Cari Video Lainnya Di Sini</a>
                 </div>
             </div>
         </div>
-        <footer><p>©All rights reserved.</p></footer>
+        <!-- Footer copyright lama dihapus total sesuai maumu gess -->
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
@@ -101,7 +105,6 @@
             x.style.display = (x.style.display === "flex") ? "none" : "flex";
         }
         
-        // 🎯 LOGIKA STABIL: Membaca parameter ?id= dari URL yang diubah oleh aturan redirect 301
         function getVideoIdFromUrl() {
             var urlParams = new URLSearchParams(window.location.search);
             var id = urlParams.get('id');
@@ -114,7 +117,6 @@
 
         $(document).ready(function() {
             var videoId = getVideoIdFromUrl();
-            // 🛡️ Saklar pelindung: Popunder utama dinonaktifkan saat halaman pertama dimuat
             var popunderEnabled = false; 
             
             // 1. CEK ADBLOCK
@@ -135,14 +137,12 @@
 
             // 3. SET GATE VERIFIKASI UMUR & DELAY POPUNDER UTAMA
             $('#btn-yes').on('click', function() {
-                // Klik pertama murni hanya membuka Smartlink secara natural (Lolos Bot Crawling FB)
                 window.open('https://researchingsweatexit.com/gccd5j0xn?key=5820c00f6a8dc98ad4c2e92f51712537', '_blank');
                 
                 $('#age-verification').fadeOut(200);
-                $('#previewVideo').removeClass('blurred');
+                $('#previewVideo').removeClass('removeClass', 'blurred');
                 document.getElementById("previewVideo").play();
 
-                // 🛡️ JEDA 3 DETIK: Setelah user masuk, popunder utama baru diberi izin untuk aktif
                 setTimeout(function() {
                     popunderEnabled = true;
                 }, 3000);
@@ -151,7 +151,6 @@
             // 4. LOGIKA DOWNLOAD BERANTAI GACOR COG
             localStorage.setItem('download_step', '0');
             $('#download-btn').on('click', function() {
-                // 🛡️ Picu popunder utama di klik kedua/seterusnya saat tombol download ditekan
                 if (popunderEnabled) {
                     if (typeof window.researchingsweatexit === 'function') {
                         window.researchingsweatexit();
@@ -178,7 +177,6 @@
                 }
             });
 
-            // 🛡️ Tambahan Keamanan: Jika user berinteraksi dengan video player (pause/play), picu popunder utama di sini
             $('#previewVideo').on('click', function() {
                 if (popunderEnabled) {
                     if (typeof window.researchingsweatexit === 'function') {
