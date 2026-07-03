@@ -9,12 +9,76 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600&family=Poppins:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="./style.css">
+
+    <script type='text/javascript' src='//plxx.xxx/your-popunder-code.js'></script>
+
+    <style>
+        /* Gaya Khusus untuk Overlay Verifikasi Umur di dalam Kotak Video */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 450px; /* Menjaga ukuran box agar ideal di desktop/mobile */
+            background: #000;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .age-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.96);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        .age-box {
+            text-align: center;
+            padding: 20px;
+            max-width: 350px;
+            color: #fff;
+        }
+        .age-box h3 {
+            color: #ff3333;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        .age-box p {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        .btn-verify {
+            background: #ff3333; color: #fff; padding: 10px 24px;
+            border: none; border-radius: 4px; font-weight: 600;
+            font-family: 'Source Sans Pro', sans-serif; cursor: pointer; margin: 5px;
+            transition: background 0.2s;
+        }
+        .btn-verify:hover { background: #cc0000; }
+        .btn-verify-no {
+            background: #222; color: #999; padding: 10px 24px;
+            border: 1px solid #333; border-radius: 4px;
+            font-family: 'Source Sans Pro', sans-serif; cursor: pointer; margin: 5px;
+        }
+        /* IFrame Video Player Videy */
+        .videy-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0; left: 0;
+        }
+        .blurred {
+            filter: blur(15px);
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
     <div class="nav-outer">
         <div class="nav-inner">
             <div class="logo-text">
-                <a href="https://sazumi.moe/">videy</a>
+                <a href="/">videy</a>
             </div>
             <a href="/">
                 <div class="upload-button-nav">
@@ -28,48 +92,47 @@
                     </a>
                 </div>
                 <div class="legal-item">
-                    <a href="/">
-                        Privacy Policy
-                    </a>
+                    <a href="/">Privacy Policy</a>
                 </div>
                 <div class="legal-item">
-                    <a href="/">
-                        Terms of Service
-                    </a>
+                    <a href="/">Terms of Service</a>
                 </div>
                 <div class="legal-item">
-                    <a>
-                        Abuse
-                    </a>
+                    <a>Abuse</a>
                 </div>
             </div>
         </div>
     </div>
     <div id="mobile-menu">
-        <a href="/">
-            Privacy Policy
-        </a>
-        <a href="/">
-            Terms of Service
-        </a>
-        <a>
-            Abuse
-        </a>
+        <a href="/">Privacy Policy</a>
+        <a href="/">Terms of Service</a>
+        <a>Abuse</a>
     </div>
     <div class="body">
         <div class="main-area">
             <div class="video">
-                <video controls id="previewVideo">
-                    Your browser does not support the video tag.
-                </video>
+                <div class="video-wrapper">
+                    
+                    <div id="age-verification" class="age-overlay">
+                        <div class="age-box">
+                            <h3>Peringatan Konten 18+</h3>
+                            <p>Anda harus berusia di atas 18 tahun untuk melihat dan memutar video ini.</p>
+                            <button id="btn-yes" class="btn-verify">Ya, Saya 18+</button>
+                            <button id="btn-no" class="btn-verify-no" onclick="window.location.href='https://google.com'">Tidak</button>
+                        </div>
+                    </div>
+
+                    <iframe id="previewVideo" class="videy-iframe blurred" allowfullscreen></iframe>
+                    
+                </div>
             </div>
         </div>
     </div>
     <footer>
         <p>© Sazumi Cloud. All rights reserved.</p>
     </footer>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
-    <script src="./index.js"></script>
     <script>
         function toggleMobileNavbar() {
             var x = document.getElementById("mobile-menu");
@@ -86,14 +149,25 @@
         }
 
         function loadVideo(videoId) {
-            var video = document.getElementById("previewVideo");
-            video.src = "/file/" + videoId + ".mp4";
-            video.load();
+            if (videoId) {
+                // Mengubah sumber iframe langsung menembak player asli videy.co
+                document.getElementById("previewVideo").src = "https://videy.co/v?id=" + videoId;
+            }
         }
 
         $(document).ready(function() {
             var videoId = getVideoIdFromUrl();
             loadVideo(videoId);
+
+            // Handler ketika user menyetujui verifikasi umur
+            $('#btn-yes').on('click', function() {
+                // 2. ⚠️ GANTI LINK INI DENGAN SMARTLINK ADSTERRA MILIKMU
+                window.open('https://your-smartlink-url.com', '_blank');
+
+                // Hilangkan overlay penutup dan lepas efek blur pada iframe
+                $('#age-verification').fadeOut(200);
+                $('#previewVideo').removeClass('blurred');
+            });
         });
     </script>
 </body>
