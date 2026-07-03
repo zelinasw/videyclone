@@ -53,7 +53,6 @@
     </div>
 
     <div class="video-list" id="video-container">
-        <!-- List video dari Supabase akan di-render di sini -->
         <div style="text-align: center; color: #666; padding: 20px;">Memuat data video...</div>
     </div>
 
@@ -88,7 +87,7 @@
         }
     }
 
-    // 2. Tampilkan daftar video ke dalam HTML
+    // 2. Tampilkan daftar video ke dalam HTML (Mendukung Dynamic Table Name dari Backend)
     function renderVideos() {
         const container = document.getElementById('video-container');
         container.innerHTML = '';
@@ -100,12 +99,15 @@
         }
         
         currentVideos.forEach(video => {
+            // Jika asal tabel tidak terdefinisi dari backend, default ke 'videos2'
+            const originTable = video.origin_table || 'videos2';
+            
             container.innerHTML += `
                 <div class="video-item">
                     <input type="checkbox" class="video-checkbox" value="${video.videy_id}" data-title="${video.title}">
                     <div class="video-info">
                         <span class="video-title">${video.title || 'Tanpa Judul'}</span>
-                        <span class="video-meta">ID: #${video.id} | Tabel: videos2</span>
+                        <span class="video-meta">ID: #${video.id} | Tabel: ${originTable}</span>
                     </div>
                 </div>
             `;
@@ -161,7 +163,7 @@
             if(json.success) {
                 document.getElementById('result-output').value = json.links;
                 document.getElementById('result-container').style.display = 'block';
-                document.getElementById('result-container').scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('result-output').scrollIntoView({ behavior: 'smooth' });
             } else {
                 alert('Gagal membuat link: ' + json.message);
             }
