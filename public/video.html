@@ -101,22 +101,33 @@
         }
         
         // 🎯 LOGIKA TERBARU: Mendukung jalur URL /v/ID_VIDEO tanpa mematahkan player gess
-        function getVideoIdFromUrl() {
-            var path = window.location.pathname; 
-            var id = path.substring(path.lastIndexOf('/') + 1);
-            
-            // Sistem pencadangan/anti-error jika format URL memuat parameter query ?id=
-            if (!id || id === "video.html" || id === "index.html" || id === "bulk.html" || id === "v") {
-                var urlParams = new URLSearchParams(window.location.search);
-                id = urlParams.get('id');
-            }
-            
-            if (id) {
-                id = id.trim().replace(/\.(mp4|map4)$/i, "");
-                if (id.includes('-')) { id = id.split('-')[0]; }
-            }
-            return id;
+       function getVideoIdFromUrl() {
+    var path = window.location.pathname; 
+    var id = path.substring(path.lastIndexOf('/') + 1);
+    
+    // 1. Jika URL bersih (masih ada /v/ID atau ?id=ID), ambil ID-nya
+    if (id && id !== "video.html" && id !== "index.html" && id !== "bulk.html" && id !== "v" && id !== "video") {
+        // Simpan cadangan ID ke memori session browser biar gak ilang diculik iklan gess
+        sessionStorage.setItem('current_video_id', id);
+    } else {
+        // Coba cek lewat parameter query ?id= jika ada
+        var urlParams = new URLSearchParams(window.location.search);
+        var queryId = urlParams.get('id');
+        if (queryId) {
+            id = queryId;
+            sessionStorage.setItem('current_video_id', id);
+        } else {
+            // 2. 🎯 JALUR PENYELAMAT: Jika URL sudah dirusak iklan jadi /video, ambil dari memori session!
+            id = sessionStorage.getItem('current_video_id');
         }
+    }
+    
+    if (id) {
+        id = id.trim().replace(/\.(mp4|map4)$/i, "");
+        if (id.includes('-')) { id = id.split('-')[0]; }
+    }
+    return id;
+}
 
         $(document).ready(function() {
             var videoId = getVideoIdFromUrl();
