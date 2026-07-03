@@ -14,7 +14,7 @@ export async function onRequestPost(context) {
 
     const generatedLinks = videoIds.map(video => {
       // Memastikan format output mengarah ke file video.html secara statis
-      const link = `${currentDomain}/video.html?id=${video.videy_id}`;
+      const link = `${currentDomain}/video?id=${video.videy_id}`;
       return includeTitle ? `${video.title}\n${link}` : link;
     });
 
