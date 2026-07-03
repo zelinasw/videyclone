@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Share Link (V1 + V2)</title>
+    <style>
+        body { background-color: #0b0b0b; color: #fff; font-family: sans-serif; padding: 20px; margin: 0; }
+        .container { max-width: 1200px; margin: 20px auto; background: #111; padding: 20px; border-radius: 8px; border: 1px solid #222; }
+        h1 { color: red; text-align: center; font-size: 24px; margin-bottom: 20px; font-family: sans-serif; }
+        .filter-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        input[type="text"], select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .options-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .video-list { max-height: 400px; overflow-y: auto; border: 1px solid #222; padding: 10px; background: #070707; border-radius: 4px; }
+        .video-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #111; gap: 15px; }
+        .video-item:hover { background: #141414; }
+        .video-checkbox { width: 18px; height: 18px; cursor: pointer; }
+        .video-info { display: flex; flex-direction: column; }
+        .video-title { font-weight: bold; color: #ccc; font-size: 15px; }
+        .video-meta { font-size: 12px; color: #666; margin-top: 4px; }
+        .btn-generate { width: 100%; background: red; color: white; padding: 15px; border: none; font-weight: bold; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-generate:hover { background: #cc0000; }
+        .result-box { margin-top: 20px; display: none; }
+        .result-box h3 { color: #fff; margin-bottom: 10px; }
+        textarea { width: 100%; height: 200px; background: #000; color: #00ff00; border: 1px solid #333; padding: 10px; font-family: monospace; box-sizing: border-box; border-radius: 4px; font-size: 14px; resize: vertical; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Bulk Share Link (V1 + V2)</h1>
+    
+    <div class="filter-box">
+        <select id="domain-target">
+            <option>Domain Utama (Cloudflare)</option>
+        </select>
+        
+        <input type="text" id="search-input" placeholder="Cari video di semua database..." oninput="fetchVideos()">
+        
+        <div class="options-row">
+            <select id="sort-order" style="width: 200px;">
+                <option value="newest">Urutan Terbaru</option>
+            </select>
+            <label style="cursor: pointer; user-select: none;">
+                <input type="checkbox" id="include-title" checked> Sertakan Judul
+            </label>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
+        <span id="selected-count">0 video dipilih</span>
+        <a href="#" onclick="selectAllVideos(event)" style="color: #0088cc; text-decoration: none; font-weight: bold;">Pilih Semua Hasil Filter</a>
+    </div>
+
+    <div class="video-list" id="video-container">
+        <!-- List video dari Supabase akan di-render di sini -->
+        <div style="text-align: center; color: #666; padding: 20px;">Memuat data video...</div>
+    </div>
+
+    <button class="btn-generate" onclick="generateLinks()">Generate List Link</button>
+
+    <div class="result-box" id="result-container">
+        <h3>Hasil Generate Link:</h3>
+        <textarea id="result-output" readonly onclick="this.select()"></textarea>
+    </div>
+</div>
+
+<script>
+    let currentVideos = [];
+
+    // 1. Ambil data video dari backend Cloudflare Functions
+    async function fetchVideos() {
+        const search = document.getElementById('search-input').value;
+        const container = document.getElementById('video-container');
+        
+        try {
+            const res = await fetch(`/api/get-videos?search=${encodeURIComponent(search)}`);
+            const json = await res.json();
+            
+            if(json.success && json.data) {
+                currentVideos = json.data;
+                renderVideos();
+            } else {
+                container.innerHTML = `<div style="text-align: center; color: red; padding: 20px;">Gagal memuat data: ${json.message || 'Error'}</div>`;
+            }
+        } catch (err) {
+            container.innerHTML = `<div style="text-align: center; color: red; padding: 20px;">Terjadi kesalahan koneksi</div>`;
+        }
+    }
+
+    // 2. Tampilkan daftar video ke dalam HTML
+    function renderVideos() {
+        const container = document.getElementById('video-container');
+        container.innerHTML = '';
+        
+        if (currentVideos.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Video tidak ditemukan.</div>';
+            updateCount();
+            return;
+        }
+        
+        currentVideos.forEach(video => {
+            container.innerHTML += `
+                <div class="video-item">
+                    <input type="checkbox" class="video-checkbox" value="${video.videy_id}" data-title="${video.title}">
+                    <div class="video-info">
+                        <span class="video-title">${video.title || 'Tanpa Judul'}</span>
+                        <span class="video-meta">ID: #${video.id} | Tabel: videos2</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // Pasang event listener untuk menghitung checkbox yang aktif
+        document.querySelectorAll('.video-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateCount);
+        });
+        
+        updateCount();
+    }
+
+    // 3. Update counter video yang dipilih
+    function updateCount() {
+        const checkedCount = document.querySelectorAll('.video-checkbox:checked').length;
+        document.getElementById('selected-count').innerText = `${checkedCount} video dipilih`;
+    }
+
+    // 4. Fitur Pilih Semua Checkbox sekaligus
+    function selectAllVideos(e) {
+        e.preventDefault();
+        const checkboxes = document.querySelectorAll('.video-checkbox');
+        if(checkboxes.length === 0) return;
+        
+        // Cek jika sudah tercentang semua, maka uncheck. Jika belum, centang semua.
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+        
+        updateCount();
+    }
+
+    // 5. Kirim data yang dipilih ke API Backend untuk diubah ke domain baru
+    async function generateLinks() {
+        const checkboxes = document.querySelectorAll('.video-checkbox:checked');
+        const includeTitle = document.getElementById('include-title').checked;
+        
+        const videoIds = Array.from(checkboxes).map(cb => ({
+            videy_id: cb.value,
+            title: cb.getAttribute('data-title')
+        }));
+
+        if(videoIds.length === 0) return alert('Silakan pilih minimal satu video terlebih dahulu!');
+
+        try {
+            const res = await fetch('/api/generate-bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoIds, includeTitle })
+            });
+            
+            const json = await res.json();
+            if(json.success) {
+                document.getElementById('result-output').value = json.links;
+                document.getElementById('result-container').style.display = 'block';
+                document.getElementById('result-container').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('Gagal membuat link: ' + json.message);
+            }
+        } catch (err) {
+            alert('Terjadi kesalahan saat memproses data.');
+        }
+    }
+
+    // Ambil data otomatis saat pertama kali halaman di-load
+    window.onload = fetchVideos;
+</script>
+</body>
+</html>
