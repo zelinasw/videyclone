@@ -1,57 +1,72 @@
-export async function onRequestGet(context) {
-  const { searchParams } = new URL(context.request.url);
-  const search = searchParams.get('search') || '';
-
-  const SUPABASE_URL = context.env.SUPABASE_URL;
-  const SUPABASE_KEY = context.env.SUPABASE_KEY;
-
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return new Response(JSON.stringify({ success: false, message: 'Kredensial Supabase belum diatur di Cloudflare.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  // 1. Susun URL query untuk tabel videos1 dan videos2
-  let url1 = `${SUPABASE_URL}/rest/v1/videos1?select=id,title,videy_id&order=id.desc&limit=500`;
-  let url2 = `${SUPABASE_URL}/rest/v1/videos2?select=id,title,videy_id&order=id.desc&limit=500`;
-  
-  // Jika ada keyword pencarian, terapkan ke kedua URL
-  if (search) {
-    const searchFilter = `&title=ilike.*${encodeURIComponent(search)}*`;
-    url1 += searchFilter;
-    url2 += searchFilter;
-  }
-
-  const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
-    'Content-Type': 'application/json'
-  };
-
+export async function onRequest(context) {
   try {
-    // 2. Ambil data dari kedua tabel secara bersamaan (Parallel Fetch) biar cepat
+    // 1. Ambil parameter search dari URL (jika ada)
+    const { searchParams } = new URL(context.request.url);
+    const searchQuery = searchParams.get('search') || '';
+
+    // 2. Ambil URL dan API Key Supabase dari Environment Variables Cloudflare kamu
+    const supabaseUrl = context.env.SUPABASE_URL;
+    const supabaseKey = context.env.SUPABASE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return new Response(JSON.stringify({ success: false, message: 'Kredensial Supabase belum diatur di Cloudflare.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 3. Susun query URL untuk mencari judul video
+    let queryParams = 'select=id,title,videy_id&order=id.desc&limit=500';
+    if (searchQuery) {
+      // Jika pengguna mengetik sesuatu di kolom search, filter berdasarkan judul (ilike = case-insensitive)
+      queryParams += `&title=ilike.*${encodeURIComponent(searchQuery)}*`;
+    }
+
+    const url1 = `${supabaseUrl}/rest/v1/videos1?${queryParams}`;
+    const url2 = `${supabaseUrl}/rest/v1/videos2?${queryParams}`;
+
+    const headers = {
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json'
+    };
+
+    // 4. Lakukan fetch secara bersamaan (Paralel) agar loading cepat
     const [res1, res2] = await Promise.all([
-      fetch(url1, { method: 'GET', headers }),
-      fetch(url2, { method: 'GET', headers })
+      fetch(url1, { headers }).catch(() => null),
+      fetch(url2, { headers }).catch(() => null)
     ]);
 
-    const data1 = await res1.json();
-    const data2 = await res2.json();
+    let data1 = [];
+    let data2 = [];
 
-    // 3. Tandai asal tabelnya agar di frontend kelihatan jelas, lalu gabungkan
-    const formattedData1 = Array.isArray(data1) ? data1.map(v => ({ ...v, origin_table: 'videos1' })) : [];
-    const formattedData2 = Array.isArray(data2) ? data2.map(v => ({ ...v, origin_table: 'videos2' })) : [];
+    // Ambil data tabel videos1 jika sukses
+    if (res1 && res1.ok) {
+      const json1 = await res1.json();
+      // Tandai asal tabelnya agar frontend bisa membedakan
+      data1 = json1.map(item => ({ ...item, origin_table: 'videos1' }));
+    }
 
-    // Gabungkan data dari videos1 dan videos2
-    let combinedData = [...formattedData1, ...formattedData2];
+    // Ambil data tabel videos2 jika sukses
+    if (res2 && res2.ok) {
+      const json2 = await res2.json();
+      // Tandai asal tabelnya agar frontend bisa membedakan
+      data2 = json2.map(item => ({ ...item, origin_table: 'videos2' }));
+    }
 
-    // 4. Urutkan hasil gabungan berdasarkan ID terbesar (terbaru) secara keseluruhan
+    // 5. GABUNGKAN KEDUA TABEL MENJADI SATU ARRAY 🎯
+    let combinedData = [...data1, ...data2];
+
+    // Urutkan ulang berdasarkan ID terbesar (terbaru) agar datanya tidak numpuk per tabel
     combinedData.sort((a, b) => b.id - a.id);
 
     return new Response(JSON.stringify({ success: true, data: combinedData }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      }
     });
+
   } catch (error) {
     return new Response(JSON.stringify({ success: false, message: error.message }), {
       status: 500,
